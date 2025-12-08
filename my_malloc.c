@@ -47,3 +47,62 @@ block_t* extend_heap(size_t size){
 
     return block;
 }
+
+// helper function - to find a suitable free block using First fit.
+block_t* find_free_block(size_t size){
+    block_t *current = head;
+    while(current != NULL){
+        if(current->is_free && current->size >= size){
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+//custom_malloc implementation starts here
+void custom_malloc(size_t size){
+    if(size==0)
+        return NULL;
+
+    block_t *block;
+    
+    // for first call
+    if(head==NULL){
+        //the heap is empty, need to go to the first block
+        block = extend_heap(size);
+        if(block == NULL){
+            // failed to extend the heap allocation
+            return NULL; 
+        }
+
+        //set global head pointer
+        head = block;
+
+        return BLOCK_DATA_ADDR(block);
+    }
+
+    // search implementation for a free block using first fit
+    block = find_free_block(size);
+
+    if(block != NULL){
+        block->is_free = 0;
+        return BLOCK_DATA_ADDR(block);
+    }
+
+    // ATP no free block is found. Therefore, extend the heap.
+
+    block_t *last = head;
+    while(last->next != NULL){
+        last = last->next;
+    } 
+
+    block = extend_heap(size);
+    // checking if extension failed
+    if(block == NULL){
+        return NULL;
+    }
+
+    last->next = block;     //adding new block after the last one.
+    return BLOCK_DATA_ADDR(block); 
+}
