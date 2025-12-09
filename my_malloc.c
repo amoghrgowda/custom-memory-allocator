@@ -1,8 +1,8 @@
 // The comments in this code is not with consideration of other's understanding but 
 // for reference by the creator(aka me) only.
+#include"my_malloc.h"
 #include<stdio.h>
 #include<unistd.h> // for sbrk() - system call to change program break location in heap
-#include<stddef.h> // for size_t - to represent the highest possible memory size of any object
 
 // The following is a header for each memory block
 typedef struct memory_block{
@@ -24,10 +24,6 @@ static block_t *head = NULL;
 // calculate address of the block header.
 // basically, reverse of BLOCK_DATA_ADDR() macro
 #define GET_BLOCK_ADDR(block_ptr) ((void*)((char*)(block_ptr)-sizeof(block_t))) 
-
-//function prototype
-void* custom_malloc(size_t size);
-void custom_free(void* ptr);
 
 //function to request new memory chunk from OS:
 block_t* extend_heap(size_t size){
@@ -67,7 +63,7 @@ block_t* find_free_block(size_t size){
 }
 
 //custom_malloc implementation starts here
-void custom_malloc(size_t size){
+void* custom_malloc(size_t size){
     if(size==0)
         return NULL;
 
