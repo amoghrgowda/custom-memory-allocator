@@ -14,10 +14,16 @@ typedef struct memory_block{
 //global heap pointer for our managed memory list:
 static block_t *head = NULL;
 
-// helper macro to calculate address of data-area from the block header address.
+// helper macros:
+
+// to calculate address of data-area from the block header address.
 // basically, takes block_t arg and returns the pointer for immediate byte following the header.
 // Need to return this pointer to user.
 #define BLOCK_DATA_ADDR(block_ptr) ((void*)((char*)(block_ptr)+sizeof(block_t)))
+
+// calculate address of the block header.
+// basically, reverse of BLOCK_DATA_ADDR() macro
+#define GET_BLOCK_ADDR(block_ptr) ((void*)((char*)(block_ptr)-sizeof(block_t))) 
 
 //function prototype
 void* custom_malloc(size_t size);
@@ -105,4 +111,35 @@ void custom_malloc(size_t size){
 
     last->next = block;     //adding new block after the last one.
     return BLOCK_DATA_ADDR(block); 
+}
+
+//implementing custom_free here.
+
+void custom_free(void *ptr){
+    if(ptr==NULL){
+        return;
+    }
+
+    block_t* block = GET_BLOCK_ADDR(ptr);
+
+    // need to prevent user from double free
+    if(block->is_free == 1){
+        fprintf(stderr, "Warning :- Attempted to double free the block! \n");
+        return;
+    }
+
+    block->is_free = 1;
+
+    // need to merge different free blocks (coalescing)
+    block_t* current = head;
+    while(current != NULL){
+        if(current->is_free && current->next != NULL && current->next->is_free){
+            //Merging current and next block
+            current->size += current->next->size + sizeof(block_t);
+
+            // skip the link to the next block by linking current block to the one after next
+            current->next = current->next->next;
+        }
+        current = current->next;
+    }
 }
