@@ -16,7 +16,7 @@ int main(){
     }
 
     // Freeing a block
-   // custom_free(a);
+    custom_free(a);
     printf("Freed block 'a'.\n");
     
     // Re-allocation Test(should use the space freed by 'a' if size matches)
