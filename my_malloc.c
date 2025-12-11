@@ -88,6 +88,30 @@ void* custom_malloc(size_t size){
     block = find_free_block(size);
 
     if(block != NULL){
+        // a free block is found
+
+        // Need to split the block if leftover chunk is above some threshold (8 bytes)
+        // This is to reduce internal fragmentation.
+        size_t min_data_size = 8; // signifies 8 bytes
+        size_t req_min_leftover = sizeof(block_t)+min_data_size;
+        
+        //checking if current block is large enough to be split
+        if(block->size >= size + req_min_leftover){
+
+            // need a new leftover block
+            block_t* new_block = (block_t*)((char*)BLOCK_DATA_ADDR(block)+size);
+            new_block->size = block->size - (size + sizeof(block_t));
+            new_block->is_free = 1;
+
+            //updating the linked list:
+            new_block->next = block->next;
+            block->next = new_block;
+
+            //shrink the size of original block
+            block->size = size;
+        }
+
+
         block->is_free = 0;
         return BLOCK_DATA_ADDR(block);
     }
